@@ -1,14 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mi Canal en Vivo</title>
-<style>body{margin:0;background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:40px} .btn{display:inline-block;margin-top:30px;padding:18px 30px;background:#1e90ff;color:#fff;text-decoration:none;border-radius:12px;font-size:20px}</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mi Canal en Vivo</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: system-ui, Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      min-height: 100vh;
+    }
+    h1 {
+      margin: 20px 0;
+      font-size: 1.9rem;
+      text-align: center;
+    }
+    #video {
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 16/9;
+      background: #111;
+      border-radius: 12px;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 25px;
+      padding: 16px 32px;
+      background: #1e90ff;
+      color: #fff;
+      text-decoration: none;
+      font-size: 1.1rem;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+    p {
+      color: #aaa;
+      margin-top: 12px;
+      font-size: 0.9rem;
+    }
+  </style>
 </head>
 <body>
-<h1>Mi Canal en Vivo</h1>
-<p>Prueba funcionando</p>
-<a class="btn" href="https://lalueza.org" target="_blank">Entrar a Lalueza.org</a>
+  <h1>Mi Canal en Vivo</h1>
+  <video id="video" controls autoplay muted playsinline></video>
+  <a class="btn" href="https://lalueza.org" target="_blank">Entrar a Lalueza.org</a>
+  <p>Video de prueba - cambia la URL cuando tengas tu .m3u8</p>
+
+  <script>
+    // CAMBIA ESTA LÍNEA cuando tengas tu propio .m3u8
+    const STREAM_URL = "https://test-streams.mux.dev/x36xhzz.m3u8";
+
+    const video = document.getElementById('video');
+    if (Hls.isSupported()) {
+      const hls = new Hls();
+      hls.loadSource(STREAM_URL);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = STREAM_URL;
+      video.addEventListener('loadedmetadata', () => {
+        video.play().catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
