@@ -1,102 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>TV Online IPTV Lite</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
-body{margin:0;font-family:Arial;background:#0b0b0b;color:#fff;text-align:center}
+body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial;text-align:center}
 header{padding:15px;background:#111;font-size:20px;font-weight:bold}
-.container{display:flex;flex-direction:column;align-items:center;padding-bottom:30px}
 video{width:95%;max-width:900px;margin-top:15px;background:#000;border-radius:10px;aspect-ratio:16/9}
-select{margin-top:15px;padding:12px;width:90%;max-width:420px;font-size:16px;border-radius:8px;background:#222;color:#fff;border:1px solid #444}
-button{margin:8px 5px;padding:10px 16px;font-size:14px;border:none;border-radius:8px;cursor:pointer}
-.btn-del{background:#ff3b3b;color:#fff}
-.btn-reset{background:#333;color:#fff}
-.status{margin-top:10px;font-size:14px;color:#00ff99;min-height:20px}
+select{margin-top:15px;padding:12px;width:90%;max-width:420px;font-size:16px;background:#222;color:#fff;border:1px solid #444;border-radius:8px}
+button{margin:8px 4px;padding:10px 14px;border:none;border-radius:8px;cursor:pointer}
+.btn-del{background:#ff3b3b;color:#fff}.btn-reset{background:#333;color:#fff}
+.status{margin-top:10px;color:#00ff99;min-height:20px}
 </style>
 </head>
 <body>
-<header>📡 IPTV LIVE - Canal Multipaís</header>
-<div class="container">
-  <select id="channels"></select>
-  <div>
-    <button class="btn-del" id="btnDel">❌ Quitar canal</button>
-    <button class="btn-reset" id="btnReset">🔄 Restaurar lista</button>
-  </div>
-  <video id="video" controls autoplay muted playsinline></video>
-  <div class="status" id="status">Listo para reproducir</div>
+<header>📡 MI CANAL - Todos los links juntos</header>
+<select id="channels"></select>
+<div>
+  <button class="btn-del" id="btnDel">❌ Quitar</button>
+  <button class="btn-reset" id="btnReset">🔄 Restaurar</button>
 </div>
+<video id="video" controls autoplay muted playsinline></video>
+<div class="status" id="status"></div>
 
 <script>
-// ===== CANALES LIVIANOS Y PÚBLICOS =====
 const DEFAULT_CHANNELS = [
-  {name:"🇫🇷 France 24 Español", url:"https://static.france24.com/live/F24_ES_LO_HLS/live_web.m3u8"},
-  {name:"🌍 Euronews Español", url:"https://rakuten-euronews-2-es.samsung.wurl.tv/playlist.m3u8"},
-  {name:"🇩🇪 DW Español", url:"https://dwamdstream102.akamaized.net/hls/live/2015530/dwstream102/index.m3u8"},
+  {name:"🧪 1- Mux Test", url:"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"},
+  {name:"🧪 2- Apple BipBop", url:"https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8"},
+  {name:"🧪 3- Apple Adv", url:"https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8"},
+  {name:"🇫🇷 France 24 ES", url:"https://static.france24.com/live/F24_ES_LO_HLS/live_web.m3u8"},
+  {name:"🌍 Euronews ES", url:"https://rakuten-euronews-2-es.samsung.wurl.tv/playlist.m3u8"},
   {name:"🇺🇸 NASA TV", url:"https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8"},
-  {name:"🇦🇷 TV Pública (backup)", url:"https://live-edge01.telecentro.net.ar/live/smil:tvpublica.smil/playlist.m3u8"}
+  {name:"🇩🇪 DW Español", url:"https://dwamdstream102.akamaized.net/hls/live/2015530/dwstream102/index.m3u8"}
 ];
 
-let channels = JSON.parse(localStorage.getItem('iptv_channels')) || [...DEFAULT_CHANNELS];
-const select = document.getElementById("channels");
-const video = document.getElementById("video");
-const status = document.getElementById("status");
-let hls, currentIndex = 0;
+let channels = JSON.parse(localStorage.getItem('iptv_all')) || [...DEFAULT_CHANNELS];
+const sel = document.getElementById('channels'), video = document.getElementById('video'), status = document.getElementById('status');
+let hls, idx=0;
 
-function saveChannels(){ localStorage.setItem('iptv_channels', JSON.stringify(channels)); }
-
-function loadList(){
-  select.innerHTML = "";
-  channels.forEach((c,i)=>{
-    const opt = document.createElement("option");
-    opt.value = i; opt.text = c.name;
-    select.appendChild(opt);
-  });
-  if(channels.length) playChannel(0);
-  else status.innerText = "Sin canales. Restaura la lista.";
+function save(){localStorage.setItem('iptv_all',JSON.stringify(channels))}
+function load(){
+  sel.innerHTML=""; channels.forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.text=c.name;sel.add(o)});
+  if(channels.length) play(0); else status.textContent="Sin canales";
 }
-
-function playChannel(index){
-  if(!channels[index]) return;
-  currentIndex = index;
-  select.value = index;
-  const {name, url} = channels[index];
-  status.innerText = "Cargando: " + name;
-  if(hls){ hls.destroy(); }
-  if(Hls.isSupported()){
-    hls = new Hls({lowLatencyMode:true});
-    hls.loadSource(url);
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, ()=>{ video.play().catch(()=>{}); status.innerText = "En vivo: " + name; });
-    hls.on(Hls.Events.ERROR, (e,data)=>{
-      if(data.fatal){
-        status.innerText = "❌ Canal caído, borrando...";
-        removeChannel(index, true);
-      }
-    });
-  } else {
-    video.src = url;
-    video.play().catch(()=>{});
-  }
+function play(i){
+  idx=i; sel.value=i; const {name,url}=channels[i]; status.textContent="Cargando: "+name;
+  if(hls)hls.destroy();
+  if(Hls.isSupported()){hls=new Hls();hls.loadSource(url);hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED,()=>{video.play();status.textContent="En vivo: "+name});
+    hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){status.textContent="❌ Caído, borrando...";del(i,true)}});
+  }else{video.src=url;video.play()}
 }
+function del(i,auto){channels.splice(i,1);save();load();if(!auto)status.textContent="Eliminado";}
 
-function removeChannel(index, auto=false){
-  const name = channels[index].name;
-  channels.splice(index,1);
-  saveChannels();
-  loadList();
-  if(!auto) status.innerText = "Eliminado: " + name;
-  if(channels[index]) playChannel(index);
-  else if(channels[index-1]) playChannel(index-1);
-}
-
-document.getElementById("btnDel").onclick = ()=>{ if(channels[currentIndex]) removeChannel(currentIndex); };
-document.getElementById("btnReset").onclick = ()=>{ localStorage.removeItem('iptv_channels'); channels=[...DEFAULT_CHANNELS]; loadList(); status.innerText="Lista restaurada"; };
-select.onchange = e => playChannel(e.target.value);
-
-loadList();
+document.getElementById('btnDel').onclick=()=>del(idx);
+document.getElementById('btnReset').onclick=()=>{localStorage.removeItem('iptv_all');channels=[...DEFAULT_CHANNELS];load()};
+sel.onchange=e=>play(e.target.value);
+load();
 </script>
 </body>
 </html>
