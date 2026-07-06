@@ -1,36 +1,14 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <title>Mi Canal en Vivo</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <style>
-    body { margin:0; background:#000; color:#fff; font-family:system-ui,Arial; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
-    h1 { font-size:2rem; margin-bottom:20px; text-align:center; }
-    #video { width:100%; max-width:800px; background:#000; border-radius:12px; }
-    .btn { display:inline-block; margin-top:20px; padding:15px 30px; background:#1e90ff; color:#fff; text-decoration:none; font-size:1.1rem; border-radius:10px; font-weight:bold; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mi Canal en Vivo</title>
+<style>body{margin:0;background:#000;color:#fff;font-family:sans-serif;text-align:center;padding:40px} .btn{display:inline-block;margin-top:30px;padding:18px 30px;background:#1e90ff;color:#fff;text-decoration:none;border-radius:12px;font-size:20px}</style>
 </head>
 <body>
-  <h1>Mi Canal en Vivo</h1>
-  
-  <video id="video" controls autoplay playsinline></video>
-  
-  <a href="https://lalueza.org" target="_blank" class="btn">Entrar a Lalueza.org</a>
-
-  <script>
-    // Video de PRUEBA para que veas que el player funciona
-    const STREAM_URL = "https://test-streams.mux.dev/x36xhzz.m3u8";
-
-    const video = document.getElementById('video');
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(STREAM_URL);
-      hls.attachMedia(video);
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = STREAM_URL;
-    }
-  </script>
+<h1>Mi Canal en Vivo</h1>
+<p>Prueba funcionando</p>
+<a class="btn" href="https://lalueza.org" target="_blank">Entrar a Lalueza.org</a>
 </body>
 </html>
