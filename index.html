@@ -2,62 +2,86 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>TV Online IPTV Lite</title>
+<title>Mi Canal - 100 Canales Públicos</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <style>
 body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial;text-align:center}
-header{padding:15px;background:#111;font-size:20px;font-weight:bold}
-video{width:95%;max-width:900px;margin-top:15px;background:#000;border-radius:10px;aspect-ratio:16/9}
-select{margin-top:15px;padding:12px;width:90%;max-width:420px;font-size:16px;background:#222;color:#fff;border:1px solid #444;border-radius:8px}
+header{padding:15px;background:#111;font-size:18px;font-weight:bold}
+video{width:95%;max-width:900px;margin-top:12px;background:#000;border-radius:10px;aspect-ratio:16/9}
+select{margin-top:12px;padding:12px;width:92%;max-width:500px;background:#222;color:#fff;border:1px solid #444;border-radius:8px}
 button{margin:8px 4px;padding:10px 14px;border:none;border-radius:8px;cursor:pointer}
 .btn-del{background:#ff3b3b;color:#fff}.btn-reset{background:#333;color:#fff}
-.status{margin-top:10px;color:#00ff99;min-height:20px}
+.status{margin-top:10px;color:#00ff99;min-height:20px;font-size:14px}
 </style>
 </head>
 <body>
-<header>📡 MI CANAL - Todos los links juntos</header>
-<select id="channels"></select>
+<header>📡 MI CANAL - 100 canales libres (auto-filtra)</header>
+<select id="channels"><option>Cargando lista...</option></select>
 <div>
-  <button class="btn-del" id="btnDel">❌ Quitar</button>
-  <button class="btn-reset" id="btnReset">🔄 Restaurar</button>
+  <button class="btn-del" id="btnDel">❌ Quitar canal</button>
+  <button class="btn-reset" id="btnReset">🔄 Recargar lista</button>
 </div>
 <video id="video" controls autoplay muted playsinline></video>
-<div class="status" id="status"></div>
+<div class="status" id="status">Iniciando...</div>
 
 <script>
-const DEFAULT_CHANNELS = [
-  {name:"🧪 1- Mux Test", url:"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"},
-  {name:"🧪 2- Apple BipBop", url:"https://devstreaming-cdn.apple.com/videos/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8"},
-  {name:"🧪 3- Apple Adv", url:"https://devstreaming-cdn.apple.com/videos/streaming/examples/img_bipbop_adv_example_fmp4/master.m3u8"},
-  {name:"🇫🇷 France 24 ES", url:"https://static.france24.com/live/F24_ES_LO_HLS/live_web.m3u8"},
-  {name:"🌍 Euronews ES", url:"https://rakuten-euronews-2-es.samsung.wurl.tv/playlist.m3u8"},
-  {name:"🇺🇸 NASA TV", url:"https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8"},
-  {name:"🇩🇪 DW Español", url:"https://dwamdstream102.akamaized.net/hls/live/2015530/dwstream102/index.m3u8"}
-];
+// Cambia "ar.m3u" por "es.m3u", "mx.m3u", "us.m3u" o "index.m3u" si quieres otro país o mundial
+const LISTA_URL = "https://iptv-org.github.io/iptv/countries/ar.m3u";
 
-let channels = JSON.parse(localStorage.getItem('iptv_all')) || [...DEFAULT_CHANNELS];
-const sel = document.getElementById('channels'), video = document.getElementById('video'), status = document.getElementById('status');
-let hls, idx=0;
+const sel = document.getElementById('channels');
+const video = document.getElementById('video');
+const status = document.getElementById('status');
+let channels = [], hls, idx = 0;
 
-function save(){localStorage.setItem('iptv_all',JSON.stringify(channels))}
-function load(){
-  sel.innerHTML=""; channels.forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.text=c.name;sel.add(o)});
-  if(channels.length) play(0); else status.textContent="Sin canales";
+async function cargar(){
+  status.textContent = "Descargando lista pública...";
+  const txt = await fetch(LISTA_URL).then(r=>r.text());
+  const lines = txt.split('\n');
+  channels = [];
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].startsWith('#EXTINF')){
+      const name = lines[i].split(',').pop().trim();
+      const url = lines[i+1]?.trim();
+      if(url && url.includes('.m3u8')) channels.push({name, url});
+    }
+    if(channels.length >= 100) break; // limitamos a 100
+  }
+  sel.innerHTML = "";
+  channels.forEach((c,i)=>{ const o=document.createElement('option'); o.value=i; o.text=c.name; sel.add(o); });
+  status.textContent = `Lista cargada: ${channels.length} canales. Probando...`;
+  if(channels.length) play(0);
 }
+
 function play(i){
-  idx=i; sel.value=i; const {name,url}=channels[i]; status.textContent="Cargando: "+name;
-  if(hls)hls.destroy();
-  if(Hls.isSupported()){hls=new Hls();hls.loadSource(url);hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>{video.play();status.textContent="En vivo: "+name});
-    hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){status.textContent="❌ Caído, borrando...";del(i,true)}});
-  }else{video.src=url;video.play()}
+  if(!channels[i]) return;
+  idx = i; sel.value = i;
+  const {name,url} = channels[i];
+  status.textContent = "Probando: " + name;
+  if(hls) hls.destroy();
+  if(Hls.isSupported()){
+    hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, ()=>{ video.play().catch(()=>{}); status.textContent = "En vivo: " + name; });
+    hls.on(Hls.Events.ERROR, (e,d)=>{
+      if(d.fatal){
+        // Marcamos como OFF pero no rompemos la lista
+        if(!channels[i].name.includes('(OFF)')) channels[i].name += " (OFF)";
+        sel.options[i].text = channels[i].name;
+        status.textContent = "❌ Bloqueado (CORS), saltando...";
+        setTimeout(()=> play((i+1)%channels.length), 1000);
+      }
+    });
+  }else{
+    video.src = url; video.play();
+  }
 }
-function del(i,auto){channels.splice(i,1);save();load();if(!auto)status.textContent="Eliminado";}
 
-document.getElementById('btnDel').onclick=()=>del(idx);
-document.getElementById('btnReset').onclick=()=>{localStorage.removeItem('iptv_all');channels=[...DEFAULT_CHANNELS];load()};
-sel.onchange=e=>play(e.target.value);
-load();
+sel.onchange = e => play(e.target.value);
+document.getElementById('btnDel').onclick = ()=>{ channels.splice(idx,1); sel.remove(idx); if(channels[idx]) play(idx); };
+document.getElementById('btnReset').onclick = cargar;
+
+cargar();
 </script>
 </body>
 </html>
