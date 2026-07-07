@@ -2,104 +2,129 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Mi Canal - TV y Películas</title>
+<title>LU1GAS - Mi Canal</title>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-body{margin:0;background:#0b0b0b;color:#fff;font-family:Arial;text-align:center}
-header{padding:12px;background:#111;font-size:18px;font-weight:bold}
-.topbtns{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:10px}
-.topbtns button{background:#1e90ff;color:#fff;border:none;padding:10px 14px;border-radius:8px;font-weight:bold;cursor:pointer}
-select{margin:6px;padding:10px;width:44%;max-width:220px;background:#222;color:#fff;border:1px solid #444;border-radius:8px}
-video{width:95%;max-width:900px;margin-top:12px;background:#000;border-radius:10px;aspect-ratio:16/9}
-.controls button{margin:8px 4px;padding:9px 13px;border:none;border-radius:8px;cursor:pointer}
-.btn-del{background:#ff3b3b;color:#fff}.btn-reset{background:#333;color:#fff}
-.status{margin-top:8px;color:#00ff99;min-height:20px;font-size:14px}
+:root{--bg:#070a10;--card:#0f1420;--acc:#00aaff;--txt:#e6eef7}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,Arial}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(90deg,#0b1220,#0a1a2e);border-bottom:1px solid #1a2335;position:sticky;top:0;z-index:10}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;letter-spacing:1px}
+.logo span{background:var(--acc);color:#001322;padding:4px 8px;border-radius:8px}
+.tag{opacity:.7;font-size:13px}
+.quick{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;background:var(--card);border-bottom:1px solid #1a2335}
+.quick button{background:#132038;border:1px solid #1f2d44;color:var(--txt);padding:9px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+.quick button:hover{border-color:var(--acc);color:var(--acc)}
+.quick.hbo{background:#5a189a;border-color:#7b2cbf}
+main{display:grid;grid-template-columns:1.3fr.7fr;gap:16px;padding:16px;max-width:1200px;margin:auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.player{background:#000;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+video{width:100%;aspect-ratio:16/9;display:block;background:#000}
+.panel{background:var(--card);border:1px solid #1a2335;border-radius:16px;padding:14px}
+.panel h3{margin:4px 0 10px;font-size:14px;opacity:.8;text-transform:uppercase;letter-spacing:.8px}
+select{width:100%;padding:11px;background:#0b1220;color:var(--txt);border:1px solid #1f2d44;border-radius:10px;margin-bottom:10px}
+.list{max-height:420px;overflow:auto;border:1px solid #1a2335;border-radius:10px}
+.list button{width:100%;text-align:left;background:transparent;border:none;border-bottom:1px solid #121a29;color:var(--txt);padding:10px 12px;cursor:pointer}
+.list button:hover{background:#0b1220;color:var(--acc)}
+.status{margin-top:10px;font-size:13px;color:#7ee787;min-height:18px}
+footer{opacity:.6;text-align:center;padding:20px;font-size:12px}
 </style>
 </head>
 <body>
-<header>📡 MI CANAL</header>
+<header>
+  <div class="logo">📡 <span>LU1GAS</span> Mi Canal</div>
+  <div class="tag">TV • Películas • Radioaficionados</div>
+</header>
 
-<div class="topbtns">
-  <button onclick="window.open('https://www.youtube.com/todonoticias/live','_blank')">TN</button>
-  <button onclick="window.open('https://www.youtube.com/@lanacionmas/live','_blank')">LN+</button>
-  <button onclick="window.open('https://www.youtube.com/@AmericaTV/live','_blank')">América</button>
-  <button onclick="window.open('https://mitelefe.com/vivo','_blank')">Telefe</button>
+<div class="quick">
+  <button onclick="openExt('https://www.youtube.com/@A24COM/live')">A24</button>
+  <button onclick="openExt('https://www.youtube.com/todonoticias/live')">TN</button>
+  <button onclick="openExt('https://www.youtube.com/@lanacionmas/live')">LN+</button>
+  <button onclick="openExt('https://www.youtube.com/@AmericaTV/live')">América</button>
+  <button onclick="openExt('https://mitelefe.com/vivo')">TELEFE</button>
+  <button class="hbo" onclick="openExt('https://www.max.com')">HBO Max</button>
+  <button onclick="openExt('https://www.youtube.com/results?search_query=radioaficionado+LU+en+vivo')">Radioaficionados</button>
 </div>
 
-<div>
-  <select id="cat">
-    <option value="ar">Canales Argentina</option>
-    <option value="accion">Películas Acción</option>
-    <option value="policial">Policial / Crimen</option>
-    <option value="drama">Drama</option>
-    <option value="comedia">Comedia</option>
-    <option value="musica">Música</option>
-  </select>
-  <select id="channels"><option>Cargando...</option></select>
-</div>
+<main>
+  <section class="player">
+    <video id="video" controls autoplay muted playsinline></video>
+  </section>
+  <aside class="panel">
+    <h3>Categoría</h3>
+    <select id="cat">
+      <option value="todos">Todos en Español</option>
+      <option value="peliculas">Películas</option>
+      <option value="accion">Acción</option>
+      <option value="policial">Policial</option>
+      <option value="drama">Drama</option>
+      <option value="comedia">Comedia</option>
+      <option value="musica">Música</option>
+      <option value="ham">Radioaficionados (streams)</option>
+    </select>
+    <h3>Canales</h3>
+    <div class="list" id="list"></div>
+    <div class="status" id="status">Listo</div>
+  </aside>
+</main>
 
-<div class="controls">
-  <button class="btn-del" id="btnDel">❌ Quitar</button>
-  <button class="btn-reset" id="btnReset">🔄 Recargar</button>
-</div>
-
-<video id="video" controls autoplay muted playsinline></video>
-<div class="status" id="status"></div>
+<footer>LU1GAS © 2026 — Interfaz profesional. Canales libres en español.</footer>
 
 <script>
-const LISTAS = {
-  ar: "https://iptv-org.github.io/iptv/countries/ar.m3u",
-  accion: "https://iptv-org.github.io/iptv/categories/action.m3u",
-  policial: "https://iptv-org.github.io/iptv/categories/action.m3u",
-  drama: "https://iptv-org.github.io/iptv/categories/drama.m3u",
-  comedia: "https://iptv-org.github.io/iptv/categories/comedy.m3u",
-  musica: "https://iptv-org.github.io/iptv/categories/music.m3u"
-};
+const URL_ES = "https://iptv-org.github.io/iptv/languages/spa.m3u";
+const HAM = [ // streams legales de radioaficionados (audio/video)
+  {name:"Ham Nation (YouTube)", url:"", ext:"https://www.youtube.com/@HamNation/live"},
+  {name:"Radio Club Argentino", url:"", ext:"https://www.youtube.com/results?search_query=radio+club+argentino+en+vivo"},
+  {name:"LU1GAS - Buscar en YouTube", url:"", ext:"https://www.youtube.com/results?search_query=LU1GAS+radioaficionado"}
+];
+const video=document.getElementById('video'), list=document.getElementById('list'), status=document.getElementById('status'), cat=document.getElementById('cat');
+let all=[], channels=[], hls;
 
-const catSel = document.getElementById('cat');
-const sel = document.getElementById('channels');
-const video = document.getElementById('video');
-const status = document.getElementById('status');
-let channels=[], hls, idx=0;
+function openExt(u){window.open(u,'_blank')}
 
-async function cargar(){
-  const url = LISTAS[catSel.value];
-  status.textContent = "Descargando lista...";
-  const txt = await fetch(url).then(r=>r.text());
-  channels = [];
-  const lines = txt.split('\n');
+async function load(){
+  status.textContent="Cargando lista en español...";
+  const txt=await fetch(URL_ES).then(r=>r.text());
+  const lines=txt.split('\n'); all=[];
   for(let i=0;i<lines.length;i++){
     if(lines[i].startsWith('#EXTINF')){
-      const name = lines[i].split(',').pop().trim();
-      const link = lines[i+1]?.trim();
-      if(link && link.includes('m3u8')) channels.push({name,url:link});
+      const name=lines[i].split(',').pop().trim();
+      const group=(lines[i].match(/group-title="([^"]*)"/)||[,''])[1].toLowerCase();
+      const url=lines[i+1]?.trim();
+      if(url?.includes('m3u8')) all.push({name,url,group});
     }
-    if(channels.length>=100) break;
   }
-  sel.innerHTML=""; channels.forEach((c,i)=>{let o=document.createElement('option');o.value=i;o.text=c.name;sel.add(o)});
-  status.textContent = `${channels.length} canales cargados`;
-  if(channels.length) play(0);
+  filtrar();
 }
-
+function filtrar(){
+  const c=cat.value;
+  if(c==='ham'){ renderHam(); return }
+  let f=all;
+  if(c==='peliculas') f=all.filter(x=>x.group.includes('movies')||/cine|pel[ií]cula/.test(x.name.toLowerCase()));
+  if(c==='accion') f=all.filter(x=>x.group.includes('action')||/acci[oó]n/.test(x.name.toLowerCase()));
+  if(c==='policial') f=all.filter(x=>/polic|crimen|investiga/.test(x.name.toLowerCase()));
+  if(c==='drama') f=all.filter(x=>x.group.includes('drama')||/novela|drama/.test(x.name.toLowerCase()));
+  if(c==='comedia') f=all.filter(x=>x.group.includes('comedy')||/comed|humor/.test(x.name.toLowerCase()));
+  if(c==='musica') f=all.filter(x=>x.group.includes('music')||/música|musica|hits/.test(x.name.toLowerCase()));
+  channels=f.slice(0,120); renderList();
+}
+function renderList(){
+  list.innerHTML=''; channels.forEach((ch,i)=>{
+    const b=document.createElement('button'); b.textContent=ch.name; b.onclick=()=>play(i); list.appendChild(b);
+  }); status.textContent=`${channels.length} canales en español`; if(channels[0]) play(0);
+}
+function renderHam(){
+  list.innerHTML=''; HAM.forEach(h=>{ const b=document.createElement('button'); b.textContent=h.name+' ↗'; b.onclick=()=>openExt(h.ext); list.appendChild(b); }); status.textContent='Radioaficionados - abre en YouTube';
+}
 function play(i){
-  if(!channels[i]) return;
-  idx=i; sel.value=i;
-  const {name,url}=channels[i];
-  status.textContent = "Probando: "+name;
+  const {name,url}=channels[i]; status.textContent='Reproduciendo: '+name;
   if(hls) hls.destroy();
-  if(Hls.isSupported()){
-    hls=new Hls(); hls.loadSource(url); hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>{}); status.textContent="En vivo: "+name});
-    hls.on(Hls.Events.ERROR,(e,d)=>{if(d.fatal){ channels[i].name+=' (OFF)'; sel.options[i].text=channels[i].name; setTimeout(()=>play((i+1)%channels.length),800); }});
-  }else{ video.src=url; video.play(); }
+  if(Hls.isSupported()){hls=new Hls();hls.loadSource(url);hls.attachMedia(video);hls.on(Hls.Events.MANIFEST_PARSED,()=>video.play().catch(()=>{}));hls.on(Hls.Events.ERROR,()=>play((i+1)%channels.length))}
+  else{video.src=url;video.play()}
 }
-
-catSel.onchange = cargar;
-sel.onchange = e=>play(e.target.value);
-document.getElementById('btnDel').onclick = ()=>{ channels.splice(idx,1); sel.remove(idx); play(idx%channels.length); };
-document.getElementById('btnReset').onclick = cargar;
-
-cargar();
+cat.onchange=filtrar;
+load();
 </script>
 </body>
 </html>
